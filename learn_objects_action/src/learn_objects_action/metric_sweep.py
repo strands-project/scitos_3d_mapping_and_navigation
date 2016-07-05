@@ -37,6 +37,18 @@ class MetricSweep(smach.State):
             raise Exception("LearnObject SM can't initialise; missing service.")
         rospy.loginfo("-> got metric map ptu action.")
 
+        self.check_soma_roi_service = False
+
+        rospy.loginfo("Checking check_point_soma_roi service")
+        try:
+            rospy.wait_for_service('/check_point_in_soma_roi',timeout = 5)
+            rospy.loginfo("Got check_point_soma_roi service")
+            self.check_soma_roi_service = True
+            self.soma_check_roi_service = rospy.Service('/check_point_in_soma_roi', PointInROI)
+
+        except rospy.ROSException:
+            rospy.logerr("check_point_soma_roi service is not found!!")
+
         self._set_waypoint_map = get_ros_service("/set_waypoint",
                                       ChangeWaypoint)
 
@@ -154,6 +166,10 @@ class SelectCluster(smach.State):
                 # which cluster should we choose!!??
                 scores = [0] * len(clusters.object_id)
                 for i, pnt in enumerate(clusters.centroids):
+                    out = True
+                    if self.check_soma_roi_service:
+                        out = self.soma_check_roi_service(pnt)
+
                     p =  Pose()
                     p.position.x = pnt.x
                     p.position.y = pnt.y
@@ -165,6 +181,9 @@ class SelectCluster(smach.State):
                                                   SOMA_region=soma_region,
                                                   return_as_trajectory=True)
                     scores[i] = len(poses.goals.poses)
+                    # If it is not in a soma region
+                    if out == False:
+                        scores[i] = 0
                 ID=numpy.argmax(scores) # the one to look at is the one that has the most observation available
             else:
                 ID=int(select)
