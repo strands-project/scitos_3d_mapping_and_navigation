@@ -993,7 +993,7 @@ int processMetaroom(CloudPtr dyncloud, std::string path, bool store_old_xml = tr
 
 				printf("peopleoverlaps: %i\n",peopleoverlaps);
 
-				if(masks.size() > 0){
+				if(masks.size() > 0 && cloud_cluster->points.size() > 0){
 					if(peopleoverlaps == 0 && cloud_cluster->points.size() >= minClusterSize){
 
 						if(store_old_xml){
