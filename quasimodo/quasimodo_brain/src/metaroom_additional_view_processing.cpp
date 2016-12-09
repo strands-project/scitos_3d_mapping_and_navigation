@@ -406,7 +406,6 @@ reglib::Model * processAV(std::string path, bool compute_edges = true, std::stri
 		bgmassreg->stopval = 0.0005;
 		bgmassreg->addModel(sweep);
 		bgmassreg->setData(frames,masks);
-		//		exit(0);
 		//printf("%s::%i\n",__PRETTY_FUNCTION__,__LINE__);
 
 		reglib::MassFusionResults bgmfr = bgmassreg->getTransforms(both_unrefined);
@@ -571,7 +570,7 @@ reglib::Model * getAVMetaroom(std::string path, bool compute_edges = true, std::
 				unsigned char * rgbdata = (unsigned char *)rgb.data;
 
 				cv::Mat depth;
-				depth.create(cloud->height,cloud->width,CV_16UC1);
+					//		exit(0);	depth.create(cloud->height,cloud->width,CV_16UC1);
 				unsigned short * depthdata = (unsigned short *)depth.data;
 
 				unsigned int nr_data = cloud->height * cloud->width;
@@ -751,7 +750,7 @@ reglib::Model * getAVMetaroom(std::string path, bool compute_edges = true, std::
     startTime_store = reglib::getTime();
     reglib::Model * test = quasimodo_brain::getModelFromSegment(*np,soma_id);
     printf("load time: %6.6f\n",reglib::getTime()-startTime_store);
-exit(0);
+
 	return fullmodel;
 }
 
@@ -1280,7 +1279,6 @@ void trainMetaroom(std::string path){
 	bgmassreg->stopval = 0.0005;
 	bgmassreg->setData(fullmodel->frames,fullmodel->modelmasks);
 	reglib::MassFusionResults bgmfr = bgmassreg->getTransforms(fullmodel->relativeposes);
-	exit(0);
 	quasimodo_brain::savePoses(overall_folder+"/"+posepath,bgmfr.poses,17);
 	fullmodel->fullDelete();
 	delete fullmodel;
@@ -2080,7 +2078,7 @@ void processSweepForDatabase(std::string path, std::string savePath){
 
 	sweep->fullDelete();
 	delete sweep;
-	//	exit(0);
+
 	//		int additional_nrviews = 0;
 	//		QStringList objectFiles = QDir(sweep_folder.c_str()).entryList(QStringList("*object*.xml"));
 	//		for (auto objectFile : objectFiles){
@@ -2387,7 +2385,7 @@ int main(int argc, char** argv){
 	printf("overall_folder: %s\n",overall_folder.c_str());
 
 //	addSceneToLastMetaroom("ed5f22eb-e6c0-426c-b905-4800780ca596");
-//exit(0);
+
 	printf("testpaths: %i\n",testpaths.size());
 	for(unsigned int i = 0; i < testpaths.size(); i++){
 		testPath(testpaths[i]);
