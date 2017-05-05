@@ -17,6 +17,8 @@
 
 #include <quasimodo_msgs/mask_pointclouds.h>
 
+#include <sensor_msgs/image_encodings.h>
+
 #define VISUALIZE 1
 
 using namespace std;

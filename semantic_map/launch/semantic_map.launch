@@ -9,7 +9,7 @@
 
   <arg name="user"   	default="" />
   <arg name="newest_dynamic_clusters" default="false" />
- 
+
   <machine name="$(arg machine)" address="$(arg machine)" env-loader="$(optenv ROS_ENV_LOADER )" user="$(arg user)"/>
 
   <node machine="$(arg machine)" pkg="semantic_map" type="semantic_map_node" name="semantic_map_node" output="screen" respawn="true">

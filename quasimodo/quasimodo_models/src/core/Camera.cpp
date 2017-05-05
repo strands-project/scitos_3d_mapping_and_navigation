@@ -3,7 +3,6 @@
 namespace reglib
 {
 
-
 unsigned int camera_id_count = 0;
 
 Camera::Camera(){
@@ -17,24 +16,14 @@ Camera::Camera(){
 	cy = float(height-1)/2;
 	idepth_scale = 0.001/5.0;
 
-	bias = 500;
-
-	pixel_weights = new double[width*height];
-	pixel_sums = new double[width*height];
-	for(unsigned int i = 0; i < width*height; i++){
-		pixel_weights[i]	= bias;
-		pixel_sums[i]		= bias;
-	}
-
+	pixel_weights = 0;
+	pixel_sums = 0;
 }
 
-Camera::~Camera(){
-	delete[] pixel_weights;
-	delete[] pixel_sums;
-}
+Camera::~Camera(){}
 
 void Camera::save(std::string path){
-	printf("save camera to %s\n",path.c_str());
+	//printf("Camera::save(%s)\n",path.c_str());
 	unsigned long buffersize = 7*sizeof(double);
 	char* buffer = new char[buffersize];
 	double * buffer_double = (double *)buffer;
@@ -58,15 +47,28 @@ void Camera::save(std::string path){
 	delete[] buffer;
 }
 
-void Camera::print(){}
+void Camera::print(){
+	printf("Camera fx: %5.5f fy: %5.5f cx: %5.5f cy: %5.5f\n",fx,fy,cx,cy);
+}
+
+
+Camera * Camera::clone(){
+	Camera * cam = new Camera();
+	cam->fx = fx;
+	cam->fy = fy;
+	cam->cx = cx;
+	cam->cy = cy;
+	return cam;
+}
 
 Camera * Camera::load(std::string path){
+	//printf("Camera::load(%s)\n",path.c_str());
 	Camera * cam = new Camera();
 
 	std::streampos size;
 	char * buffer;
 
-	std::ifstream file (path, std::ios::in | std::ios::binary | std::ios::ate);
+	std::ifstream file (path+"_data.txt", std::ios::in | std::ios::binary | std::ios::ate);
 	if (file.is_open()){
 		size = file.tellg();
 		buffer = new char [size];

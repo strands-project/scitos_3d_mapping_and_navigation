@@ -4,7 +4,7 @@ project(semantic_map)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS mongodb_store roscpp rospy std_msgs sensor_msgs pcl_ros message_generation qt_build image_geometry cv_bridge tf_conversions strands_sweep_registration metaroom_xml_parser observation_registration_services)
+find_package(catkin REQUIRED COMPONENTS  quasimodo_msgs semantic_map_msgs mongodb_store roscpp rospy std_msgs sensor_msgs pcl_ros message_generation qt_build image_geometry cv_bridge tf_conversions strands_sweep_registration metaroom_xml_parser observation_registration_services)
 find_package(Boost REQUIRED COMPONENTS system thread program_options filesystem)
 
 set(CMAKE_CXX_FLAGS "-O4 -fPIC -std=c++0x -fpermissive ${CMAKE_CXX_FLAGS}")
@@ -18,21 +18,21 @@ add_definitions(${PCL_DEFINITIONS})
 
 rosbuild_prepare_qt4(QtCore QtXml)
   
-add_message_files(
-  FILES
-  RoomObservation.msg
-)
+#add_message_files(
+#  FILES
+#  RoomObservation.msg
+#)
 
-add_service_files(
-   FILES
-   ClearMetaroomService.srv
-)
+#add_service_files(
+#   FILES
+#   ClearMetaroomService.srv
+#)
 
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  sensor_msgs
-)
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#  sensor_msgs
+#)
 
 catkin_package(
    INCLUDE_DIRS include
@@ -94,11 +94,13 @@ set(SRCS
 
 add_library(semantic_map ${HDRS} ${HDRS_IMPL} ${SRCS})
 add_executable(semantic_map_node include/semantic_map/semantic_map_node.h src/semantic_map_node.cpp src/semantic_map_main.cpp)
+#add_executable(semantic_map_recompute include/semantic_map/semantic_map_node.h src/semantic_map_node.cpp src/semantic_map_recompute.cpp)
 add_executable(load_from_mongo src/load_from_mongo.cpp)
 add_executable(add_to_mongo src/add_to_mongo.cpp)
 
-add_dependencies(semantic_map semantic_map_generate_messages_cpp primitive_extraction_generate_messages_cpp strands_perception_msgs_generate_messages_cpp observation_registration_services_generate_messages_cpp)
-add_dependencies(semantic_map_node semantic_map_generate_messages_cpp primitive_extraction_generate_messages_cpp strands_perception_msgs_generate_messages_cpp observation_registration_services_generate_messages_cpp)
+add_dependencies(semantic_map semantic_map_msgs_generate_messages_cpp quasimodo_msgs_generate_messages_cpp semantic_map_generate_messages_cpp primitive_extraction_generate_messages_cpp strands_perception_msgs_generate_messages_cpp observation_registration_services_generate_messages_cpp)
+add_dependencies(semantic_map_node semantic_map_msgs_generate_messages_cpp quasimodo_msgs_generate_messages_cpp semantic_map_generate_messages_cpp primitive_extraction_generate_messages_cpp strands_perception_msgs_generate_messages_cpp observation_registration_services_generate_messages_cpp)
+#add_dependencies(semantic_map_recompute quasimodo_msgs_generate_messages_cpp semantic_map_generate_messages_cpp primitive_extraction_generate_messages_cpp strands_perception_msgs_generate_messages_cpp observation_registration_services_generate_messages_cpp)
 
  target_link_libraries(semantic_map
    ${catkin_LIBRARIES}
@@ -114,6 +116,14 @@ add_dependencies(semantic_map_node semantic_map_generate_messages_cpp primitive_
    ${Boost_LIBRARIES}
    semantic_map
   )
+
+ #target_link_libraries(semantic_map_recompute
+ #  ${catkin_LIBRARIES}
+ #  ${PCL_LIBRARIES}
+ #  ${QT_LIBRARIES}
+ #  ${Boost_LIBRARIES}
+ #  semantic_map
+ # )
 
  target_link_libraries(load_from_mongo
    ${catkin_LIBRARIES}
@@ -133,7 +143,7 @@ add_dependencies(semantic_map_node semantic_map_generate_messages_cpp primitive_
 
 ############################# INSTALL TARGETS
 
-install(TARGETS semantic_map semantic_map_node load_from_mongo
+install(TARGETS semantic_map semantic_map_node load_from_mongo #semantic_map_recompute
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

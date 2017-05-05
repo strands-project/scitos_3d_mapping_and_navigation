@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(quasimodo_brain)
 
-find_package(catkin REQUIRED COMPONENTS roscpp soma_msgs soma_manager quasimodo_msgs quasimodo_models message_runtime pcl_ros metaroom_xml_parser eigen_conversions cv_bridge)
+
+find_package(catkin REQUIRED COMPONENTS quasimodo_models roscpp soma_msgs object_manager object_manager_msgs semantic_map_msgs soma_manager local_metric_map_people_rejection quasimodo_msgs quasimodo_conversions quasimodo_models message_runtime pcl_ros metaroom_xml_parser eigen_conversions cv_bridge)
+
 
 set(CMAKE_CXX_FLAGS "-O4 -g -pg -Wunknown-pragmas -Wno-unknown-pragmas -Wsign-compare -fPIC -std=c++0x -o popcnt -mssse3")
 
@@ -17,29 +19,7 @@ include_directories(${catkin_INCLUDE_DIRS})
 # This is the root dir of https://github.com/nilsbore/dynamic_object_retrieval
 set(retrieval_project_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../dynamic_object_retrieval/)
 
-
-# This is the base vocabulary tree representation
-#set(k_means_tree_dir ${retrieval_project_dir}/k_means_tree)
-#set(k_means_tree_library_dir ${k_means_tree_dir}/build)
-#include_directories(${k_means_tree_dir}/include ${k_means_tree_dir}/impl)
-#link_directories(${k_means_tree_library_dir})
-
-# This is the stopwatch by Whelan, also included in the base dir
-#set(stopwatch_dir ${retrieval_dir}/stopwatch)
-#set(stopwatch_include_dir ${stopwatch_dir}/src)
-#include_directories(${stopwatch_include_dir})
-
 find_package(OpenGL)
-
-# The benchmark project is also in the base dir
-#set(benchmark_dir ${retrieval_project_dir}/benchmark)
-#set(benchmark_libraries benchmark_result benchmark_retrieval benchmark_visualization benchmark_overlap surfel_renderer ${OPENGL_gl_LIBRARY} ${QT_QTOPENGL_LIBRARY})
-#include_directories(${benchmark_dir}/include)
-#link_directories(${benchmark_dir}/build)
-
-# Define the locations of cereal serialization header files
-#set(cereal_include_dir ${k_means_tree_dir}/cereal/include)
-#include_directories(${cereal_include_dir})
 
 ##############################################
 ##################### INCLUDES ###############
@@ -85,8 +65,29 @@ catkin_package(
 
 include_directories(${catkin_INCLUDE_DIRS})
 
-add_library(quasimodo_ModelDatabase src/ModelDatabase/ModelDatabase.cpp src/ModelDatabase/ModelDatabaseBasic.cpp  src/ModelDatabase/ModelDatabaseRGBHistogram.cpp)# src/ModelDatabase/ModelDatabaseRetrieval.cpp)
+
+add_library(quasimodo_brain_util src/Util/Util.cpp)
+target_link_libraries(quasimodo_brain_util
+					  #${retrieval_libraries}
+					  #${benchmark_libraries}
+					  ${OpenCV_LIBS}
+					  ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES}
+					  ${PCL_LIBRARIES}
+					  ${catkin_LIBRARIES})
+
+add_library(quasimodo_ModelStorage src/ModelStorage/ModelStorage.cpp src/ModelStorage/ModelStorageFile.cpp)
+target_link_libraries(quasimodo_ModelStorage
+						quasimodo_brain_util
+					  #${retrieval_libraries}
+					  #${benchmark_libraries}
+					  ${OpenCV_LIBS}
+					  ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES}
+					  ${PCL_LIBRARIES}
+					  ${catkin_LIBRARIES})
+
+add_library(quasimodo_ModelDatabase src/ModelDatabase/ModelDatabase.cpp src/ModelDatabase/ModelDatabaseBasic.cpp  src/ModelDatabase/ModelDatabaseRGBHistogram.cpp src/ModelDatabase/ModelDatabaseRetrieval.cpp )
 target_link_libraries(quasimodo_ModelDatabase
+						quasimodo_ModelStorage quasimodo_brain_util
 					  #${retrieval_libraries}
 					  #${benchmark_libraries}
                       ${OpenCV_LIBS}
@@ -99,19 +100,24 @@ target_link_libraries(	preload_object_data ${catkin_LIBRARIES} ${PCL_LIBRARIES} 
 add_dependencies(		preload_object_data roscpp quasimodo_msgs_generate_messages_cpp)
 target_link_libraries(	preload_object_data  image_geometry cpp_common roscpp rosconsole tf_conversions ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
-add_executable(		robot_listener src/robot_listener.cpp)
+add_executable(			robot_listener src/robot_listener.cpp)
 target_link_libraries(	robot_listener ${catkin_LIBRARIES} ${PCL_LIBRARIES} ${QT_LIBRARIES} metaroom_xml_parser)
-add_dependencies(	robot_listener roscpp quasimodo_msgs_generate_messages_cpp)
+add_dependencies(		robot_listener roscpp quasimodo_msgs_generate_messages_cpp)
 target_link_libraries(	robot_listener  image_geometry cpp_common roscpp rosconsole tf_conversions ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 add_executable(			modelserver src/modelserver.cpp)
 add_dependencies(		modelserver roscpp quasimodo_msgs_generate_messages_cpp)
-target_link_libraries(	modelserver quasimodo_ModelDatabase  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(	modelserver quasimodo_superpoint quasimodo_brain_util quasimodo_ModelDatabase  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
 
 
 add_executable(			massregPCD src/massregPCD.cpp)
 add_dependencies(		massregPCD roscpp quasimodo_msgs_generate_messages_cpp)
 target_link_libraries(	massregPCD quasimodo_ModelDatabase quasimodo_ModelUpdater image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			voPCD src/voPCD.cpp)
+add_dependencies(		voPCD roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	voPCD quasimodo_brain_util quasimodo_ModelDatabase quasimodo_ModelUpdater image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
 
 add_executable(			velodyne2 src/velodyne2.cpp)
 add_dependencies(		velodyne2 roscpp quasimodo_msgs_generate_messages_cpp)
@@ -120,6 +126,43 @@ target_link_libraries(	velodyne2 quasimodo_ModelDatabase quasimodo_ModelUpdater 
 add_executable(			MeshTest src/MeshTest.cpp)
 add_dependencies(		MeshTest roscpp quasimodo_msgs_generate_messages_cpp)
 target_link_libraries(	MeshTest quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			test_align2 src/test_align2.cpp)
+add_dependencies(		test_align2 roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	test_align2 quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			test_segment src/test_segment.cpp)
+add_dependencies(		test_segment roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	test_segment quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			segment_room_pairs src/segment_room_pairs.cpp)
+add_dependencies(		segment_room_pairs roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	segment_room_pairs quasimodo_ModelUpdater quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			test_segment_room_pairs src/test_segment_room_pairs.cpp)
+add_dependencies(		test_segment_room_pairs roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	test_segment_room_pairs quasimodo_ModelUpdater quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			segmentationserver src/segmentationserver.cpp)
+add_dependencies(		segmentationserver roscpp quasimodo_msgs_generate_messages_cpp)
+target_link_libraries(	segmentationserver quasimodo_brain_util quasimodo_ModelUpdater quasimodo_ModelDatabase quasimodo_Mesher  image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			metaroom_additional_view_processing src/metaroom_additional_view_processing.cpp)
+add_dependencies(		metaroom_additional_view_processing roscpp quasimodo_msgs_generate_messages_cpp object_manager_msgs_generate_messages_cpp semantic_map_msgs_generate_messages_cpp)
+target_link_libraries(	metaroom_additional_view_processing quasimodo_superpoint quasimodo_ModelUpdater quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			AnnotationTool src/AnnotationTool.cpp)
+add_dependencies(		AnnotationTool roscpp quasimodo_msgs_generate_messages_cpp object_manager_msgs_generate_messages_cpp semantic_map_msgs_generate_messages_cpp)
+target_link_libraries(	AnnotationTool quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			pcl_multivisualizer src/pcl_multivisualizer.cpp)
+add_dependencies(		pcl_multivisualizer roscpp quasimodo_msgs_generate_messages_cpp object_manager_msgs_generate_messages_cpp semantic_map_msgs_generate_messages_cpp)
+target_link_libraries(	pcl_multivisualizer quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
+add_executable(			zoomer src/zoomer.cpp)
+add_dependencies(		zoomer roscpp quasimodo_msgs_generate_messages_cpp object_manager_msgs_generate_messages_cpp semantic_map_msgs_generate_messages_cpp)
+target_link_libraries(	zoomer quasimodo_brain_util quasimodo_ModelDatabase quasimodo_Mesher image_geometry cpp_common roscpp rosconsole tf_conversions metaroom_xml_parser ${QT_QTMAIN_LIBRARY} ${QT_LIBRARIES} ${catkin_LIBRARIES})
+
 
 #############
 ## Install ##
@@ -130,7 +173,7 @@ target_link_libraries(	MeshTest quasimodo_ModelDatabase quasimodo_Mesher  image_
 
 # Mark executables and/or libraries for installation
 
-install(TARGETS quasimodo_ModelDatabase preload_object_data modelserver robot_listener
+install(TARGETS zoomer pcl_multivisualizer quasimodo_brain_util quasimodo_ModelDatabase preload_object_data modelserver robot_listener massregPCD voPCD velodyne2 MeshTest test_align2 test_segment segment_room_pairs test_segment_room_pairs segmentationserver metaroom_additional_view_processing AnnotationTool
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

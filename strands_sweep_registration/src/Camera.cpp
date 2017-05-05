@@ -1,4 +1,4 @@
-#include "strands_sweep_registration/Camera.h"
+#include "../include/strands_sweep_registration/Camera.h"
 #include <fstream>
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv/cv.hpp"
@@ -17,16 +17,57 @@ Camera::Camera(float fx_, float fy_, float cx_, float cy_,	int width_,	int heigh
 	for(int i = 0; i < width*height; i++){
 		pixelsFunctions[i] = new PixelFunction(); 
 	}
-	
+
 	version = 2;
+
+//	coefs_degree = 1;
+//	coefs_width = width/40;
+//	coefs_height = height/40;
+
+
+//	multiplierCoeffs = new double[coefs_degree*coefs_width*coefs_height];
+//	for(int w = 0; w < width; w++){
+//		for(int h = 0; h < height; h++){
+//			double * coeffs = getCoeffs(w,h);
+//			coeffs[0] = 1.0;
+//			for(unsigned int i = 1; i < coefs_degree; i++){
+//				coeffs[i] = 0.0;
+//			}
+//		}
+//	}
+
+	//getMultiplier(55, 55, 1);
 };
 
 Camera::~Camera(){
+	//delete[] multiplierCoeffs;
+
 	for(int i = 0; i < width*height; i++){
 		delete pixelsFunctions[i]; 
 	}
 	delete[] pixelsFunctions;
-};
+}
+
+double * Camera::getCoeffs(unsigned int w, unsigned int h){
+	return multiplierCoeffs + coefs_degree*(coefs_width*h + w);
+}
+
+double Camera::getGridMultiplier(unsigned int w, unsigned int h, double z){
+	double * coeffs = getCoeffs(w,h);
+	return 0;
+}
+
+double Camera::getMultiplier(double w, double h, double z){
+	double wgrid = w/(coefs_width+1);
+	double hgrid = h/(coefs_height+1);
+
+	double pw = wgrid-double(int(wgrid));
+	double ph = hgrid-double(int(hgrid));
+
+	printf("%f %f -> %f %f -> %f %f\n",w,h,wgrid,hgrid,pw,ph);
+exit(0);
+	return 1;
+}
 
 void Camera::save(std::string path){
 	std::vector<char *> pixeldata_char;

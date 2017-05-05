@@ -68,10 +68,13 @@ add_service_files(
   query_cloud.srv
   simple_query_cloud.srv
   visualize_query.srv
+  segment_model.srv
+  metaroom_pair.srv
   transform_cloud.srv
   mask_pointclouds.srv
   insert_model.srv
   model_to_retrieval_query.srv
+  recognize.srv
 )
 
 ## Generate actions in the 'action' folder

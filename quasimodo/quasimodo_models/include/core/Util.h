@@ -20,6 +20,28 @@
 #include "ceres/rotation.h"
 #include "ceres/iteration_callback.h"
 
+#include <boost/graph/incremental_components.hpp>
+#include <boost/graph/graphviz.hpp>
+#include <boost/graph/graph_utility.hpp>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/iteration_macros.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/one_bit_color_map.hpp>
+#include <boost/graph/stoer_wagner_min_cut.hpp>
+#include <boost/range/adaptor/reversed.hpp>
+#include <boost/graph/copy.hpp>
+
+#include <iostream>
+#include <unordered_map>
+
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+
+#include "superpoint.h"
+#include "ReprojectionResult.h"
+#include "OcclusionScore.h"
+#include "quasimodo_point.h"
+
 using ceres::NumericDiffCostFunction;
 using ceres::SizedCostFunction;
 using ceres::CENTRAL;
@@ -30,62 +52,102 @@ using ceres::Solver;
 using ceres::Solve;
 using ceres::Solve;
 
+typedef boost::property<boost::edge_weight_t, float> edge_weight_property;
+typedef boost::property<boost::vertex_name_t, size_t> vertex_name_property;
+using Graph = boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS, vertex_name_property, edge_weight_property>;
+using Vertex = boost::graph_traits<Graph>::vertex_descriptor;
+using VertexIndex = boost::graph_traits<Graph>::vertices_size_type;
+using Edge = boost::graph_traits<Graph>::edge_descriptor;
+using Components = boost::component_index<VertexIndex>;
+
 namespace reglib
 {
 
-//namespace nanoflann {
-//	/// KD-tree adaptor for working with data directly stored in an Eigen Matrix, without duplicating the data storage.
-//	/// This code is adapted from the KDTreeEigenMatrixAdaptor class of nanoflann.hpp
-//	template <class MatrixType, int DIM = -1, class Distance = nanoflann::metric_L2, typename IndexType = int>
-//	struct KDTreeAdaptor {
-//		typedef KDTreeAdaptor<MatrixType,DIM,Distance> self_t;
-//		typedef typename MatrixType::Scalar              num_t;
-//		typedef typename Distance::template traits<num_t,self_t>::distance_t metric_t;
-//		typedef KDTreeSingleIndexAdaptor< metric_t,self_t,DIM,IndexType>  index_t;
-//		index_t* index;
-//		KDTreeAdaptor(const MatrixType &mat, const int leaf_max_size = 10) : m_data_matrix(mat) {
-//			const size_t dims = mat.rows();
-//			index = new index_t( dims, *this, nanoflann::KDTreeSingleIndexAdaptorParams(leaf_max_size, dims ) );
-//			index->buildIndex();
-//		}
-//		~KDTreeAdaptor() {delete index;}
-//		const MatrixType &m_data_matrix;
-//		/// Query for the num_closest closest points to a given point (entered as query_point[0:dim-1]).
-//		inline void query(const num_t *query_point, const size_t num_closest, IndexType *out_indices, num_t *out_distances_sq) const {
-//			nanoflann::KNNResultSet<typename MatrixType::Scalar,IndexType> resultSet(num_closest);
-//			resultSet.init(out_indices, out_distances_sq);
-//			index->findNeighbors(resultSet, query_point, nanoflann::SearchParams());
-//		}
-//		/// Query for the closest points to a given point (entered as query_point[0:dim-1]).
-//		inline IndexType closest(const num_t *query_point) const {
-//			IndexType out_indices;
-//			num_t out_distances_sq;
-//			query(query_point, 1, &out_indices, &out_distances_sq);
-//			return out_indices;
-//		}
-//		const self_t & derived() const {return *this;}
-//		self_t & derived() {return *this;}
-//		inline size_t kdtree_get_point_count() const {return m_data_matrix.cols();}
-//		/// Returns the distance between the vector "p1[0:size-1]" and the data point with index "idx_p2" stored in the class:
-//		inline num_t kdtree_distance(const num_t *p1, const size_t idx_p2,size_t size) const {
-//			num_t s=0;
-//			for (size_t i=0; i<size; i++) {
-//				const num_t d= p1[i]-m_data_matrix.coeff(i,idx_p2);
-//				s+=d*d;
-//			}
-//			return s;
-//		}
-//		/// Returns the dim'th component of the idx'th point in the class:
-//		inline num_t kdtree_get_pt(const size_t idx, int dim) const {
-//			return m_data_matrix.coeff(dim,idx);
-//		}
-//		/// Optional bounding-box computation: return false to default to a standard bbox computation loop.
-//		template <class BBOX> bool kdtree_get_bbox(BBOX&) const {return false;}
-//	};
-//}
+void pn(double p, unsigned int len = 3);
 
-// This is an exampleof a custom data set class
 
+
+float graph_cut(std::vector<Graph*>& graphs_out,std::vector<std::vector<int>>& second_graphinds, Graph& graph_in, std::vector<int> graph_inds);
+
+float recursive_split(std::vector<Graph*> * graphs_out,std::vector<std::vector<int>> * graphinds_out, Graph * graph, std::vector<int> graph_inds);
+
+std::vector<int> partition_graph(std::vector< std::vector< float > > & scores);
+
+inline double getNoise(double depth){return depth*depth;}
+
+inline double getInformation(double depth){
+	//if(depth == 0 || depth > 4){return 0.00000000001;}
+	double n = getNoise(depth);
+	return 1.0/(n*n);
+}
+
+inline double getNoise(double n1, double n2){
+	double info1 = 1.0/(n1*n1);
+	double info2 = 1.0/(n2*n2);
+	double info3 = info1+info2;
+	return sqrt(1.0/info3);
+}
+
+inline double getNoiseFromInformation(double info1, double info2){
+	double info3 = info1+info2;
+	return sqrt(1.0/info3);
+}
+
+inline double getNoiseFromInformation(double info){
+	double cov = 1/info;
+	return sqrt(cov);
+}
+
+pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr getPointCloudFromVector(std::vector<superpoint> & spvec, int colortype = 0, int r = -1, int g = -1, int b = -1);
+
+
+/**
+ * @brief Returns homogenous 4x4 transformation matrix for given rotation (quaternion) and translation components
+ * @param q rotation represented as quaternion
+ * @param trans homogenous translation
+ * @return tf 4x4 homogeneous transformation matrix
+ *
+ */
+inline Eigen::Matrix4f
+RotTrans2Mat4f(const Eigen::Quaternionf &q, const Eigen::Vector4f &trans)
+{
+    Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();;
+    tf.block<3,3>(0,0) = q.toRotationMatrix();
+    tf.block<4,1>(0,3) = trans;
+    tf(3,3) = 1.f;
+    return tf;
+}
+
+
+/**
+ * @brief Returns homogenous 4x4 transformation matrix for given rotation (quaternion) and translation components
+ * @param q rotation represented as quaternion
+ * @param trans translation
+ * @return tf 4x4 homogeneous transformation matrix
+ *
+ */
+inline Eigen::Matrix4f
+RotTrans2Mat4f(const Eigen::Quaternionf &q, const Eigen::Vector3f &trans)
+{
+    Eigen::Matrix4f tf = Eigen::Matrix4f::Identity();
+    tf.block<3,3>(0,0) = q.toRotationMatrix();
+    tf.block<3,1>(0,3) = trans;
+    return tf;
+}
+
+/**
+ * @brief Returns rotation (quaternion) and translation components from a homogenous 4x4 transformation matrix
+ * @param tf 4x4 homogeneous transformation matrix
+ * @param q rotation represented as quaternion
+ * @param trans homogenous translation
+ */
+inline void
+Mat4f2RotTrans(const Eigen::Matrix4f &tf, Eigen::Quaternionf &q, Eigen::Vector4f &trans)
+{
+    Eigen::Matrix3f rotation = tf.block<3,3>(0,0);
+    q = rotation;
+    trans = tf.block<4,1>(0,3);
+}
 
 template <typename T> struct ArrayData3D {
 	int rows;
@@ -138,6 +200,8 @@ template <typename T> struct ArrayData3D {
 	//typedef nanoflann2::KDTreeEigenMatrixAdaptor< Eigen::Matrix<double,-1,-1>, SAMPLES_DIM,nanoflann2::metric_L2_Simple> KDTreed;
 	//typedef nanoflann2::KDTreeEigenMatrixAdaptor< Eigen::Matrix<float,-1,-1>, SAMPLES_DIM,nanoflann2::metric_L2_Simple> KDTreef;
 	double getTime();
+	double mysign(double v);
+
 
 
 	struct PointCostFunctor {
@@ -230,7 +294,7 @@ template <typename T> struct ArrayData3D {
 								Eigen::Matrix<double, 3, Eigen::Dynamic> & Y,
 								Eigen::Matrix<double, 3, Eigen::Dynamic> & Yn,
 								Eigen::VectorXd & W);
-	bool isconverged(std::vector<Eigen::Matrix4d> before, std::vector<Eigen::Matrix4d> after, double stopvalr = 0.001, double stopvalt = 0.001);
+    bool isconverged(std::vector<Eigen::Matrix4d> before, std::vector<Eigen::Matrix4d> after, double stopvalr = 0.001, double stopvalt = 0.001, bool verbose = false);
 	void setFirstIdentity(std::vector<Eigen::Matrix4d> & v);
 }
 
@@ -273,6 +337,8 @@ struct PointCloud
 	template <class BBOX>
 	bool kdtree_get_bbox(BBOX& /* bb */) const { return false; }
 };
+
+
 }
 
 typedef nanoflann::KDTreeSingleIndexAdaptor< nanoflann::L2_Simple_Adaptor<double, reglib::ArrayData3D<double> > , reglib::ArrayData3D<double>,3> Tree3d;

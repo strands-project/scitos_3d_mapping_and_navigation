@@ -99,6 +99,8 @@ std::vector< std::vector<cv::Mat> > masks;
 std::vector< std::vector<tf::StampedTransform > >tfs;
 std::vector< std::vector<Eigen::Matrix4f> > initposes;
 
+ros::Publisher metaroom_pub;
+
 std::vector<Eigen::Matrix4f> getRegisteredViewPoses(const std::string& poses_file, const int& no_transforms){
     std::vector<Eigen::Matrix4f> toRet;
     ifstream in(poses_file);
@@ -127,11 +129,23 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
 
     ROS_INFO("I heard: [%s]", msg->data.c_str());
 
+    std::string str = msg->data.c_str();
+
     ObjectData object = semantic_map_load_utilties::loadDynamicObjectFromSingleSweep<PointType>(msg->data.c_str());
 
     printf("number of inds: %i",int(object.objectScanIndices.size()));
     printf("AVs: %i\n",int(object.vAdditionalViews.size()));
     if (!object.vAdditionalViews.size()){return;}
+
+    std::cout << "Splitting: " << str << '\n';
+    std::size_t found = str.find_last_of("/\\");
+    std::cout << " path: " << str.substr(0,found) << '\n';
+    std::cout << " file: " << str.substr(found+1) << '\n';
+
+    //SimpleXMLParser<PointType> parser;
+    //SimpleXMLParser<PointType>::RoomData roomData  = parser.loadRoomFromXML(str.substr(0,found)+"/room.xml");
+
+    //roomData.completeRoomCloud();
 
 
 
@@ -141,7 +155,7 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
     std::vector<tf::StampedTransform > viewtfs;
     std::vector<Eigen::Matrix4f> viewposes;
 
-    int step = std::max(1,int(0.5+double(object.vAdditionalViews.size())/10.0));
+    int step = 1;//std::max(1,int(0.5+double(object.vAdditionalViews.size())/10.0));
 	printf("step: %i\n",step);
 
     for (unsigned int i=0; i < 2000 && i<object.vAdditionalViews.size(); i+=step){
@@ -184,7 +198,8 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
         viewrgbs.push_back(rgb);
         viewdepths.push_back(depth);
         viewmasks.push_back(mask);
-        viewtfs.push_back(object.vAdditionalViewsTransformsRegistered[i]);
+        //viewtfs.push_back(object.vAdditionalViewsTransformsRegistered[i]);
+        viewtfs.push_back(object.vAdditionalViewsTransforms[i]);
 
 //		cv::namedWindow("rgbimage",	cv::WINDOW_AUTOSIZE);
 //		cv::imshow(		"rgbimage",	rgb);
@@ -216,9 +231,9 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
 
             geometry_msgs::Pose		pose;
             pose.orientation		= tfmsg.rotation;
-            pose.position.x		= tfmsg.translation.x;
-            pose.position.y		= tfmsg.translation.y;
-            pose.position.z		= tfmsg.translation.z;
+            pose.position.x         = tfmsg.translation.x;
+            pose.position.y         = tfmsg.translation.y;
+            pose.position.z         = tfmsg.translation.z;
             //            pose.orientation.x	= q.x();
             //            pose.orientation.y	= q.y();
             //            pose.orientation.z	= q.z();
@@ -226,6 +241,8 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
             //            pose.position.x		= m(0,3);
             //            pose.position.y		= m(1,3);
             //            pose.position.z		= m(2,3);
+
+
 
 
             cv_bridge::CvImage rgbBridgeImage;
@@ -243,6 +260,15 @@ void chatterCallback(const std_msgs::String::ConstPtr& msg)
             ifsrv.request.frame.rgb			= *(rgbBridgeImage.toImageMsg());
             ifsrv.request.frame.depth		= *(depthBridgeImage.toImageMsg());
 
+//			ifsrv.request.frame.camera.K[0] = 536.458000;//cams[i][j].fx();
+//			ifsrv.request.frame.camera.K[4] = 537.422000;//cams[i][j].fy();
+//			ifsrv.request.frame.camera.K[2] = 314.458000;//cams[i][j].cx();
+//			ifsrv.request.frame.camera.K[5] = 242.038000;//cams[i][j].cy();
+//533.796,0,314.863,0,0,533.113,241.271,0,0,0,1,0,
+            ifsrv.request.frame.camera.K[0] = 533.796;
+            ifsrv.request.frame.camera.K[4] = 533.113;
+            ifsrv.request.frame.camera.K[2] = 314.863;
+            ifsrv.request.frame.camera.K[5] = 241.271;
             if (index_frame_client.call(ifsrv)){//Add frame to model server
                 int frame_id = ifsrv.response.frame_id;
                 fadded.push_back(j);
@@ -451,7 +477,7 @@ void chatterCallback2(const std_msgs::String::ConstPtr& msg)
 }
 
 int main(int argc, char** argv){
-    ros::init(argc, argv, "use_rares_client");
+    ros::init(argc, argv, "robot_listener");
     ros::NodeHandle n;
 
     std::string listentopic = "/some/stupid/topic";

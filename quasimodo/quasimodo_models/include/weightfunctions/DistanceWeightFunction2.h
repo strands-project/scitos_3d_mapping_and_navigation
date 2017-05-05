@@ -41,12 +41,21 @@ public:
 	double convergence_threshold;
 	bool debugg_print;
 
+	std::string savePath;
+	std::stringstream saveData;
+
 	DistanceWeightFunction2();
 	~DistanceWeightFunction2();
 
+	MatrixXd getMat(std::vector<double> & vec);
+
+	virtual void computeModel(std::vector<double> & vec);
 	virtual void computeModel(MatrixXd mat);
+	virtual VectorXd getProbs(std::vector<double> & vec);
 	virtual VectorXd getProbs(MatrixXd mat);
-	virtual double getProb(double d);
+
+	virtual double getProbInfront(double d, bool debugg = false);
+	virtual double getProb(double d, bool debugg = false);
 	virtual double getNoise();
 	virtual double getConvergenceThreshold();
 	virtual bool update();
@@ -58,4 +67,5 @@ public:
 
 #include "DistanceWeightFunction2PPR.h"
 #include "DistanceWeightFunction2PPR2.h"
+#include "DistanceWeightFunction2PPR3.h"
 #endif // DistanceWeightFunction2_H

@@ -5,6 +5,7 @@ using namespace std;
 
 std::vector<DynamicObject::Ptr> dynamic_object_utilities::loadDynamicObjects(std::string folder, bool verbose)
 {
+	printf("std::vector<DynamicObject::Ptr> dynamic_object_utilities::loadDynamicObjects(std::string folder, bool verbose)\n");
     std::vector<DynamicObject::Ptr>  objects;
 
     folder+=std::string("/");
@@ -23,6 +24,7 @@ std::vector<DynamicObject::Ptr> dynamic_object_utilities::loadDynamicObjects(std
     for (size_t i=0; i<objectFiles.size(); i++)
     {
         string object_file = folder+objectFiles[i].toStdString();
+		printf("object_file: %s\n",object_file.c_str());
         if (verbose)
         {
             cout<<"Now parsing object "<<object_file<<endl;

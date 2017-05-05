@@ -7,8 +7,26 @@ DistanceWeightFunction2::DistanceWeightFunction2(){
 	p = 0.5;
 	f = PNORM;
 	convergence_threshold = 0.0001;
+	savePath = "";
+	saveData.str("");
 }
 DistanceWeightFunction2::~DistanceWeightFunction2(){}
+
+MatrixXd DistanceWeightFunction2::getMat(std::vector<double> & vec){
+	unsigned long nr_data = vec.size();
+	Eigen::VectorXd v (nr_data);
+	for(unsigned long i = 0; i < nr_data; i++){v(i) = vec[i];}
+	return v;
+}
+
+void DistanceWeightFunction2::computeModel(std::vector<double> & vec){
+	computeModel(getMat(vec));
+}
+
+
+VectorXd DistanceWeightFunction2::getProbs(std::vector<double> & vec){
+	return getProbs(getMat(vec));
+}
 
 void tukey_weight(Eigen::VectorXd& r, double p) {
 	for(int i=0; i<r.rows(); ++i) {
@@ -52,8 +70,14 @@ VectorXd DistanceWeightFunction2::getProbs(MatrixXd mat){
 	return W;//VectorXf(mat.rows());
 }
 
-double DistanceWeightFunction2::getProb(double d){
+double DistanceWeightFunction2::getProb(double d, bool debugg){
 	printf("double DistanceWeightFunction2::getProbs(double d){ not implemented\n");
+	exit(0);
+	return 0;
+}
+
+double DistanceWeightFunction2::getProbInfront(double d, bool debugg){
+	printf("double DistanceWeightFunction2::getProbInfront(double d){ not implemented\n");
 	exit(0);
 	return 0;
 }

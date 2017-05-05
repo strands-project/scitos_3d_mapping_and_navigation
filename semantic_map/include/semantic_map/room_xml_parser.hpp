@@ -55,6 +55,7 @@ bool SemanticRoomXMLParser<PointType>::setRootFolderFromRoomXml(std::string room
 template <class PointType>
 std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointType>& aRoom, std::string xmlFile, bool verbose )
 {    
+	printf("saveRoomAsXML\n");
     // create folder structure
     QString roomLogName(aRoom.getRoomLogName().c_str());
     int index = roomLogName.indexOf('_');
@@ -135,15 +136,15 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
     QString cloudFilename("complete_cloud.pcd");
     QString completeCloudFilename = roomFolder + cloudFilename; // add the folder prefix
     xmlWriter->writeAttribute("filename",cloudFilename);
-    xmlWriter->writeEndElement();
+	xmlWriter->writeEndElement();
     if (aRoom.getCompleteRoomCloudLoaded()) // only save the cloud file if it's been loaded
-    {
+	{
         QFile file(completeCloudFilename);
 //        if (!file.exists())
-        {
+		{
             if (aRoom.getCompleteRoomCloud()->points.size()>0)
-            {
-                pcl::io::savePCDFileBinary(completeCloudFilename.toStdString(), *aRoom.getCompleteRoomCloud());
+			{
+				pcl::io::savePCDFileBinary(completeCloudFilename.toStdString(), *aRoom.getCompleteRoomCloud());
                 if (verbose)
                 {
                     ROS_INFO_STREAM("Saving complete cloud file name "<<completeCloudFilename.toStdString());
@@ -165,7 +166,7 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
         {
             if (aRoom.getInteriorRoomCloud()->points.size()>0)
             {
-                pcl::io::savePCDFileBinary(interiorCloudFilename.toStdString(), *aRoom.getInteriorRoomCloud());
+				pcl::io::savePCDFileBinary(interiorCloudFilename.toStdString(), *aRoom.getInteriorRoomCloud());
                 if (verbose)
                 {
                     ROS_INFO_STREAM("Saving interior cloud file name "<<interiorCloudFilename.toStdString());
@@ -188,7 +189,7 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
         {
             if (aRoom.getDeNoisedRoomCloud()->points.size())
             {
-                pcl::io::savePCDFileBinary(denoisedCloudFilename.toStdString(), *aRoom.getDeNoisedRoomCloud());
+				pcl::io::savePCDFileBinary(denoisedCloudFilename.toStdString(), *aRoom.getDeNoisedRoomCloud());
                 if (verbose)
                 {
                     ROS_INFO_STREAM("Saving denoised cloud file name "<<denoisedCloudFilename.toStdString());
@@ -202,11 +203,15 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
     QString dynamicClustersFilename = roomFolder + dynamicClustersFilenameLocal; // add the folder prefix
     QFile dynamicClustersFile(dynamicClustersFilename);
 
+	//
+
+
     if (aRoom.getDynamicClustersCloudLoaded() && aRoom.getDynamicClustersCloud()->points.size()) // only save the cloud file if it's been loaded
     {
+		printf("there are dynamic clusters found\n");
         //            if (!dynamicClustersFile.exists())
         //            {
-        pcl::io::savePCDFileBinary(dynamicClustersFilename.toStdString(), *aRoom.getDynamicClustersCloud());
+		pcl::io::savePCDFileBinary(dynamicClustersFilename.toStdString(), *aRoom.getDynamicClustersCloud());
 
         if (verbose)
         {
@@ -218,6 +223,7 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
         xmlWriter->writeAttribute("filename",dynamicClustersFilenameLocal);
         xmlWriter->writeEndElement();
     } else {
+		printf("no dynamic clusters found\n");
         if (dynamicClustersFile.exists())
         {
             xmlWriter->writeStartElement("RoomDynamicClusters");
@@ -271,7 +277,7 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
             ss << "intermediate_cloud"<<std::setfill('0')<<std::setw(4)<<i<<".pcd";
             intermediateCloudLocalPath = ss.str().c_str();
             intermediateCloudPath = roomFolder + intermediateCloudLocalPath;
-        }
+		}
         xmlWriter->writeAttribute("filename",intermediateCloudLocalPath);
 
         if(roomIntermediateCloudsLoaded[i] && aRoom.getSaveIntermediateClouds())
@@ -279,7 +285,7 @@ std::string SemanticRoomXMLParser<PointType>::saveRoomAsXML(SemanticRoom<PointTy
             QFile file(intermediateCloudPath);
             if (!file.exists())
             {
-                pcl::io::savePCDFileBinary(intermediateCloudPath.toStdString(), *roomIntermediateClouds[i]);
+				pcl::io::savePCDFileBinary(intermediateCloudPath.toStdString(), *roomIntermediateClouds[i]);
                 if (verbose)
                 {
                     ROS_INFO_STREAM("Saving intermediate cloud file name "<<intermediateCloudPath.toStdString());

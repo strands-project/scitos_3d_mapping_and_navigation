@@ -127,7 +127,9 @@ class SelectCluster(smach.State):
 
 
     def execute(self, userdata):
+        print "SelectCluster::execute"
         try:
+            print "LINE::1"
             # Load the waypoint to soma from file
             if self._rois_file != "NONE":
                 with open(self._rois_file, "r") as f:
@@ -135,10 +137,13 @@ class SelectCluster(smach.State):
                 soma_region = somas[userdata.action_goal.waypoint]
             else:
                 soma_region = ""
-
+                
+            print "LINE::1.5"
             #clusters = self._get_clusters(userdata['waypoint'])
             clusters = self._get_clusters(userdata.action_goal.waypoint)
 
+            print "LINE::2"
+            
             if self._debug_mode:
                 available=[str(s) for s in range(len(clusters.object_id))]
                 self._debug_services.set_status("SELECT CLUSTER: ["+",".join(available)+"]")
@@ -146,6 +151,8 @@ class SelectCluster(smach.State):
             else:
                 select="auto"
 
+            print "LINE::3"
+            
             if select=="PREEMPT" or select=="none":
                 return 'none'
             elif select=="auto":
@@ -169,21 +176,41 @@ class SelectCluster(smach.State):
             else:
                 ID=int(select)
 
+
+            print "LINE:4"
             rospy.logwarn( "Getting cluster: %s"%clusters.object_id[ID])
             #one_cluster = self._get_specific_cluster(userdata['waypoint'], clusters.object_id[ID])
+            
             one_cluster = self._get_specific_cluster(userdata.action_goal.waypoint,
                                                      clusters.object_id[ID])
             userdata['dynamic_object']=one_cluster
             userdata.dynamic_object_centroid = clusters.centroids[ID]
             userdata.dynamic_object_points = clusters.objects[ID]
             userdata.dynamic_object_id = clusters.object_id[ID]
-            world = World()
-            userdata['object'] = world.create_object()
-            userdata['object'].add_identification('ObjectLearnerID', ObjectIdentification({'NEW':1}))
+            print "LINE:5"
+            #world = World()
+            print "LINE:6"
+            #userdata['object'] = world.create_object()
+            print "LINE:7"
+            #userdata['object'].add_identification('ObjectLearnerID', ObjectIdentification({'NEW':1}))
+            print "LINE:8"
             print clusters.object_id[ID]
+            print "LINE:9"
             print "="*20
             print clusters.centroids[ID]
+            print "LINE:10"
             print "="*20
+            
+            #print userdata.dynamic_object_centroid
+            #print "LINE:10"
+            #print "="*20
+            
+                        
+            #print userdata
+            #print "LINE:10"
+            #print "="*20
+            
+            print "LINE:11"
             return "selected"
         except Exception, e:
             rospy.logwarn("Failed to select a cluster!!!!")

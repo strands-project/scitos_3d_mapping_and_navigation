@@ -2,13 +2,14 @@ cmake_minimum_required(VERSION 2.8.3)
 project(quasimodo_models)
 
 #find_package(catkin REQUIRED)# quasimodo_msgs)# COMPONENTS quasimodo_msgs)
-set(CMAKE_CXX_FLAGS "-O4 -g -pg -Wunknown-pragmas -Wno-unknown-pragmas -Wsign-compare -fPIC -std=c++0x -o popcnt -mssse3")
-
+#set(CMAKE_CXX_FLAGS "-O4 -g -pg -Wunknown-pragmas -Wno-unknown-pragmas -Wsign-compare -fopenmp -fPIC -std=c++0x -o popcnt -mssse3")
+set(CMAKE_CXX_FLAGS "-O2 -g -pg -Wunknown-pragmas -Wno-unknown-pragmas -Wsign-compare -fopenmp -fPIC -std=c++0x -o popcnt -mssse3")
 
 find_package(catkin REQUIRED COMPONENTS
 	#metaroom_xml_parser
 	#semantic_map
 	pcl_ros
+	quasimodo_conversions
 )
 
 
@@ -52,24 +53,39 @@ include_directories(/usr/local/include/)
 FIND_PACKAGE(Ceres REQUIRED)
 INCLUDE_DIRECTORIES(${CERES_INCLUDE_DIRS})
 
+add_library(quasimodo_SignalProcessing src/weightfunctions/SignalProcessing.cpp)
+target_link_libraries(quasimodo_SignalProcessing ${catkin_LIBRARIES})
 
-add_library(quasimodo_weightlib src/weightfunctions/DistanceWeightFunction2.cpp src/weightfunctions/DistanceWeightFunction2PPR.cpp src/weightfunctions/DistanceWeightFunction2PPR2.cpp)
-target_link_libraries(quasimodo_weightlib ceres glog ${catkin_LIBRARIES})
+add_library(quasimodo_distribution src/weightfunctions/Distribution.cpp src/weightfunctions/GaussianDistribution.cpp src/weightfunctions/GeneralizedGaussianDistribution.cpp)
+target_link_libraries(quasimodo_distribution ceres glog ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_library(quasimodo_weightlib src/weightfunctions/DistanceWeightFunction2.cpp src/weightfunctions/DistanceWeightFunction2PPR.cpp src/weightfunctions/DistanceWeightFunction2PPR2.cpp src/weightfunctions/DistanceWeightFunction2PPR3.cpp)
+target_link_libraries(quasimodo_weightlib quasimodo_SignalProcessing quasimodo_distribution ceres glog ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_library(quasimodo_superpoint src/core/superpoint.cpp)
+target_link_libraries(quasimodo_superpoint ${catkin_LIBRARIES})
+
+add_library(quasimodo_ReprojectionResult src/core/ReprojectionResult.cpp)
+target_link_libraries(quasimodo_ReprojectionResult quasimodo_superpoint ${catkin_LIBRARIES})
+
+add_library(quasimodo_OcclusionScore src/core/OcclusionScore.cpp)
+target_link_libraries(quasimodo_OcclusionScore ${catkin_LIBRARIES})
+
 
 add_library(quasimodo_core src/core/Util.cpp src/core/Camera.cpp src/core/RGBDFrame.cpp)
-target_link_libraries(quasimodo_core ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
+target_link_libraries(quasimodo_core quasimodo_OcclusionScore quasimodo_ReprojectionResult quasimodo_superpoint quasimodo_weightlib ${CERES_LIBRARIES} ${OpenCV_LIBRARIES} ${catkin_LIBRARIES})
 
 add_library(quasimodo_reglib src/registration/Registration.cpp src/registration/RegistrationRandom.cpp src/registration/RegistrationRefinement.cpp)
 target_link_libraries(quasimodo_reglib quasimodo_weightlib ceres glog ${catkin_LIBRARIES})
-
-add_library(quasimodo_massreglib src/registration/MassRegistration.cpp src/registration/MassRegistrationPPR.cpp)
-target_link_libraries(quasimodo_massreglib quasimodo_reglib quasimodo_core)
 
 add_library(quasimodo_modelmask src/model/ModelMask.cpp)
 target_link_libraries(quasimodo_modelmask quasimodo_core quasimodo_reglib ${catkin_LIBRARIES})
 
 add_library(quasimodo_model src/model/Model.cpp)
 target_link_libraries(quasimodo_model quasimodo_modelmask quasimodo_core quasimodo_reglib ${catkin_LIBRARIES})
+
+add_library(quasimodo_massreglib src/registration/MassRegistration.cpp src/registration/MassRegistrationPPR.cpp src/registration/MassRegistrationPPR2.cpp)
+target_link_libraries(quasimodo_massreglib quasimodo_model quasimodo_reglib quasimodo_core)
 
 add_library(quasimodo_Mesher src/mesher/Mesh.cpp)
 target_link_libraries(quasimodo_Mesher quasimodo_model ${catkin_LIBRARIES})
@@ -89,7 +105,7 @@ target_link_libraries(quasimodo_ModelUpdater quasimodo_Mesher quasimodo_model qu
 
 
 # Mark executables and/or libraries for installation
-install(TARGETS quasimodo_weightlib quasimodo_core quasimodo_reglib quasimodo_massreglib quasimodo_modelmask quasimodo_model quasimodo_Mesher quasimodo_ModelUpdater
+install(TARGETS quasimodo_SignalProcessing quasimodo_distribution quasimodo_weightlib quasimodo_superpoint quasimodo_ReprojectionResult quasimodo_OcclusionScore quasimodo_core quasimodo_reglib quasimodo_massreglib quasimodo_modelmask quasimodo_model quasimodo_Mesher quasimodo_ModelUpdater
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

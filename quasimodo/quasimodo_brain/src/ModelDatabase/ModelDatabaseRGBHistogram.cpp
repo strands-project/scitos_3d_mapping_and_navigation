@@ -2,6 +2,7 @@
 
 ModelDatabaseRGBHistogram::ModelDatabaseRGBHistogram(int res_){
 	res = res_;
+	storage = new ModelStorageFile();
 	printf("made a ModelDatabaseRGBHistogram(%i)\n",res);
 }
 ModelDatabaseRGBHistogram::~ModelDatabaseRGBHistogram(){}
@@ -26,15 +27,18 @@ std::vector< double > getDescriptor(int res, reglib::Model * model){
 	return descriptor;
 }
 
-void ModelDatabaseRGBHistogram::add(reglib::Model * model){
+bool ModelDatabaseRGBHistogram::add(reglib::Model * model){
+	storage->add(model);
 	//std::vector< std::vector< double > > descriptors;
 	std::vector< double > descriptor = getDescriptor(res,model);
 	descriptors.push_back(descriptor);
 	models.push_back(model);
+	return true;
 	//printf("number of models: %i\n",models.size());
 }
 
 bool ModelDatabaseRGBHistogram::remove(reglib::Model * model){
+	storage->remove(model);
 	for(unsigned int i = 0; i < models.size(); i++){
 		if(models[i] == model){
 			models[i] = models.back();

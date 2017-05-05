@@ -20,41 +20,9 @@
 
 namespace reglib
 {
+using namespace std;
+using namespace Eigen;
 
-class superpoint{
-	public:
-	Eigen::Vector3f point;
-	Eigen::Vector3f normal;
-	Eigen::VectorXf feature;
-	double point_information;
-	double feature_information;
-	int last_update_frame_id;
-
-	superpoint(Eigen::Vector3f p, Eigen::Vector3f n, Eigen::VectorXf f, double pi = 1, double fi = 1, int id = 0){
-		point = p;
-		normal = n;
-		feature = f;
-		point_information = pi;
-		feature_information = fi;
-		last_update_frame_id = id;
-	}
-
-	~superpoint(){}
-
-	void merge(superpoint p, double weight = 1){
-		point = weight*p.point_information*p.point + point_information*point;
-		point /= weight*p.point_information + point_information;
-		point_information = weight*p.point_information + point_information;
-
-		normal = weight*p.point_information*p.normal + point_information*normal;
-		normal.normalize();
-
-		feature = weight*p.feature_information*p.feature + feature_information*feature;
-		feature /= weight*p.feature_information + feature_information;
-		feature_information = weight*p.feature_information + feature_information;
-		last_update_frame_id = std::max(p.last_update_frame_id,last_update_frame_id);
-	}
-};
 
 	class Model{
 		public:
@@ -64,23 +32,45 @@ class superpoint{
 
 		int last_changed;
 
+		std::string savePath;
+		std::string soma_id;
+
+		std::string pointspath;
 		std::vector<superpoint> points;
 
-		std::vector<Eigen::Matrix4d> relativeposes;
-		std::vector<RGBDFrame*> frames;
-		//std::vector<cv::Mat> masks;
-		std::vector<ModelMask*> modelmasks;
+		std::vector< std::vector<cv::KeyPoint> >	all_keypoints;
+		std::vector< cv::Mat >						all_descriptors;
+		std::vector<Eigen::Matrix4d>				relativeposes;
+		std::vector<RGBDFrame*>						frames;
+		std::vector<ModelMask*>						modelmasks;
+
+		std::vector<Eigen::Matrix4d>	rep_relativeposes;
+		std::vector<RGBDFrame*>			rep_frames;
+		std::vector<ModelMask*>			rep_modelmasks;
 
 		double total_scores;
 		std::vector<std::vector < float > > scores;
 
+		std::vector<Model *>				submodels;
+		std::vector<Eigen::Matrix4d>		submodels_relativeposes;
+		std::vector<std::vector < float > > submodels_scores;
+		Model * parrent;
+
 		Model();
 		Model(RGBDFrame * frame_, cv::Mat mask, Eigen::Matrix4d pose = Eigen::Matrix4d::Identity());
 		~Model();
+
+		void fullDelete();
 		
 		void merge(Model * model, Eigen::Matrix4d p);
 
-		void recomputeModelPoints();
+		void showHistory(boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer);
+
+		std::vector<pcl::PointCloud<pcl::PointXYZRGB>::Ptr> getHistory();
+
+		void addSuperPoints(	vector<superpoint> & spvec, Matrix4d p, RGBDFrame* frame, ModelMask* modelmask, boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = 0);
+		void addAllSuperPoints(	vector<superpoint> & spvec, Eigen::Matrix4d pose,								boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = 0);
+		void recomputeModelPoints(Eigen::Matrix4d pose = Eigen::Matrix4d::Identity(),							boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer = 0);
 		void addPointsToModel(RGBDFrame * frame, ModelMask * modelmask, Eigen::Matrix4d p);
 
 		//void addFrameToModel(RGBDFrame * frame, cv::Mat mask, Eigen::Matrix4d p);
@@ -92,6 +82,10 @@ class superpoint{
 		void save(std::string path = "");
 		static Model * load(Camera * cam, std::string path);
 		bool testFrame(int ind = 0);
+
+		void getData(std::vector<Eigen::Matrix4d> & po, std::vector<RGBDFrame*> & fr, std::vector<ModelMask*> & mm, Eigen::Matrix4d p = Eigen::Matrix4d::Identity());
+
+		//void getData(std::vector<Eigen::Matrix4d> & po, std::vector<RGBDFrame*> & fr, std::vector<ModelMask*> & mm, Eigen::Matrix4d p = Eigen::Matrix4d::Identity());
 	};
 
 }
