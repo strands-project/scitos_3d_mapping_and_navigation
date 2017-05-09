@@ -108,7 +108,9 @@ bool maybe_append(const boost::filesystem::path& segments_path)
         boost::filesystem::path segment_path = segments_path / (ss.str() + ".pcd");
 
         cout << "Comparing segments of type: " << endl;
-        cout << data_summary.index_convex_segment_paths[0] << endl;
+        if (!data_summary.index_convex_segment_paths.empty()) {
+            cout << data_summary.index_convex_segment_paths[0] << endl;
+        }
         cout << "to" << endl;
         cout << segment_path.string() << endl;
 
