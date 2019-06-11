@@ -109,7 +109,7 @@ Transformation * AICK::getTransformation(RGBDFrame * src, RGBDFrame * dst)
 
 	}
 	//printf("img-0...\n");
-	vector<KeyPoint * > src_keypoints;//	= src->keypoints->valid_key_points;
+	vector<KeyPoint2 * > src_keypoints;//	= src->keypoints->valid_key_points;
 	int nr_loop_src = src->keypoints->valid_key_points.size();
 	if(nr_loop_src > max_points){nr_loop_src = max_points;}
 	int nr_loop_dst = dst->keypoints->valid_key_points.size();
@@ -122,7 +122,7 @@ Transformation * AICK::getTransformation(RGBDFrame * src, RGBDFrame * dst)
 		}
 	}
 
-	vector<KeyPoint * > dst_keypoints;//	= dst->keypoints->valid_key_points;
+	vector<KeyPoint2 * > dst_keypoints;//	= dst->keypoints->valid_key_points;
 	for(int i = 0; i < nr_loop_dst; i++)
 	{
 		if(dst->keypoints->valid_key_points.at(i)->stabilety > stabilety_threshold){
@@ -258,8 +258,8 @@ Transformation * AICK::getTransformation(RGBDFrame * src, RGBDFrame * dst)
 			
 			if(match_distances[i][j] < threshold && j != -1){
 				//if(src->id == 793){printf("j = %i\n",j);}
-				KeyPoint * src_kp = src_keypoints.at(i);
-				KeyPoint * dst_kp = dst_keypoints.at(j);
+				KeyPoint2 * src_kp = src_keypoints.at(i);
+				KeyPoint2 * dst_kp = dst_keypoints.at(j);
 				if(debugg_AICK){
 					cvCircle(img_combine_clone,cvPoint(dst_kp->point->w + width	, dst_kp->point->h), 5,cvScalar(0, 255, 0, 0),2, 8, 0);
 					cvCircle(img_combine_clone,cvPoint(src_kp->point->w			, src_kp->point->h), 5,cvScalar(0, 255, 0, 0),2, 8, 0);
@@ -270,7 +270,7 @@ Transformation * AICK::getTransformation(RGBDFrame * src, RGBDFrame * dst)
 				
 				if(iter == nr_iter-1){
 					transformation->weight++;
-					transformation->matches.push_back(make_pair (src_kp, dst_kp));
+					//transformation->matches.push_back(make_pair (src_kp, dst_kp));
 				}
 			}
 		}		

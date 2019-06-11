@@ -14,8 +14,8 @@ Transformation * Transformation::clone(){
 	transformation->weight	= weight;
 	transformation->time	= time;
 	for(unsigned int i = 0; i < matches.size();i++){
-		KeyPoint * src_kp = matches.at(i).first;
-		KeyPoint * dst_kp = matches.at(i).second;
+		KeyPoint2 * src_kp = matches.at(i).first;
+		KeyPoint2 * dst_kp = matches.at(i).second;
 		transformation->matches.push_back(make_pair(src_kp, dst_kp));
 	}
 
@@ -174,28 +174,28 @@ IplImage * Transformation::getMatchImg(){
 	//cvReleaseImage( &rgb_img_dst );
 
 	for(unsigned int i = 0; i < src->keypoints->valid_key_points.size(); i++){
-		KeyPoint * src_kp = src->keypoints->valid_key_points.at(i);
+		KeyPoint2 * src_kp = src->keypoints->valid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(src_kp->point->w			, src_kp->point->h), 3,cvScalar(0, 255, 0, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < src->keypoints->invalid_key_points.size(); i++){
-		KeyPoint * kp = src->keypoints->invalid_key_points.at(i);
+		KeyPoint2 * kp = src->keypoints->invalid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(kp->point->w			, kp->point->h), 3,cvScalar(0, 255, 255, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < dst->keypoints->valid_key_points.size(); i++){
-		KeyPoint * dst_kp = dst->keypoints->valid_key_points.at(i);
+		KeyPoint2 * dst_kp = dst->keypoints->valid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(dst_kp->point->w + width	, dst_kp->point->h), 3,cvScalar(0, 255, 0, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < dst->keypoints->invalid_key_points.size(); i++){
-		KeyPoint * kp = dst->keypoints->invalid_key_points.at(i);
+		KeyPoint2 * kp = dst->keypoints->invalid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(kp->point->w + width	, kp->point->h), 3,cvScalar(0, 255, 255, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < matches.size(); i++){
-		KeyPoint * src_kp = matches.at(i).first;
-		KeyPoint * dst_kp = matches.at(i).second;
+		KeyPoint2 * src_kp = matches.at(i).first;
+		KeyPoint2 * dst_kp = matches.at(i).second;
 		cvLine(img_combine,cvPoint(dst_kp->point->w  + width ,dst_kp->point->h),cvPoint(src_kp->point->w,src_kp->point->h),cvScalar(0, 0, 255, 0),1, 8, 0);
 	}
 
@@ -249,28 +249,28 @@ void Transformation::saveProblem(string path){
 	cvReleaseImage( &rgb_img_dst );
 
 	for(unsigned int i = 0; i < src->keypoints->valid_key_points.size(); i++){
-		KeyPoint * src_kp = src->keypoints->valid_key_points.at(i);
+		KeyPoint2 * src_kp = src->keypoints->valid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(src_kp->point->w			, src_kp->point->h), 3,cvScalar(0, 255, 0, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < src->keypoints->invalid_key_points.size(); i++){
-		KeyPoint * kp = src->keypoints->invalid_key_points.at(i);
+		KeyPoint2 * kp = src->keypoints->invalid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(kp->point->w			, kp->point->h), 3,cvScalar(0, 255, 255, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < dst->keypoints->valid_key_points.size(); i++){
-		KeyPoint * dst_kp = dst->keypoints->valid_key_points.at(i);
+		KeyPoint2 * dst_kp = dst->keypoints->valid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(dst_kp->point->w + width	, dst_kp->point->h), 3,cvScalar(0, 255, 0, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < dst->keypoints->invalid_key_points.size(); i++){
-		KeyPoint * kp = dst->keypoints->invalid_key_points.at(i);
+		KeyPoint2 * kp = dst->keypoints->invalid_key_points.at(i);
 		cvCircle(img_combine,cvPoint(kp->point->w + width	, kp->point->h), 3,cvScalar(0, 255, 255, 0),1, 8, 0);
 	}
 
 	for(unsigned int i = 0; i < matches.size() ; i++){
-		KeyPoint * src_kp = matches.at(i).first;
-		KeyPoint * dst_kp = matches.at(i).second;
+		KeyPoint2 * src_kp = matches.at(i).first;
+		KeyPoint2 * dst_kp = matches.at(i).second;
 		cvLine(img_combine,cvPoint(dst_kp->point->w  + width ,dst_kp->point->h),cvPoint(src_kp->point->w,src_kp->point->h),cvScalar(0, 0, 255, 0),1, 8, 0);
 	}
 

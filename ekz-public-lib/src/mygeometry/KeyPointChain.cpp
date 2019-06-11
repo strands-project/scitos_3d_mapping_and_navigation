@@ -4,7 +4,7 @@
 
 int kpc = 0;
 
-KeyPointChain::KeyPointChain(KeyPoint * kp){
+KeyPointChain::KeyPointChain(KeyPoint2 * kp){
 	id = kpc++;
 	key_points.push_back(kp);
 };

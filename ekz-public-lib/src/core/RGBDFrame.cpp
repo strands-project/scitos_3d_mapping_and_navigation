@@ -1,6 +1,6 @@
 #include "RGBDFrame.h"
 #include "math.h"
-#include "ros/ros.h"
+#include <ros/ros.h>
 
 int frame_id_counter = 0;
 RGBDFrame::RGBDFrame(){}
@@ -22,7 +22,7 @@ RGBDFrame::RGBDFrame(FrameInput * fi, FeatureExtractor * extractor, RGBDSegmenta
 	for(unsigned int i = 0; i < keypoints->valid_key_points.size();i++){
 		int best_id = 0;
 		float best = 10000000000;
-		KeyPoint * kp = keypoints->valid_key_points.at(i);
+		KeyPoint2 * kp = keypoints->valid_key_points.at(i);
 		for(unsigned int j = 0; j < words.size();j++){
 			float d = kp->descriptor->distance(words.at(j));
 			/*
@@ -41,7 +41,7 @@ RGBDFrame::RGBDFrame(FrameInput * fi, FeatureExtractor * extractor, RGBDSegmenta
 	for(unsigned int i = 0; i < keypoints->invalid_key_points.size();i++){
 		int best_id = 0;
 		float best = 10000000000;
-		KeyPoint * kp = keypoints->invalid_key_points.at(i);
+		KeyPoint2 * kp = keypoints->invalid_key_points.at(i);
 		for(unsigned int j = 0; j < words.size();j++){
 			float d = kp->descriptor->distance(words.at(j));
 			if(d < 0.40){kp->cluster_distance_pairs.push_back(make_pair(j,d));}

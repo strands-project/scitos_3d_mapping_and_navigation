@@ -1,4 +1,4 @@
-#include "KeyPoint.h"
+#include "KeyPoint2.h"
 
 KeyPoint2::KeyPoint2(){
 	descriptor = 0;
