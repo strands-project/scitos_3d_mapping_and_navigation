@@ -11,6 +11,15 @@
 
 #include <Eigen/Dense>
 #include <Eigen/SVD>
+#include "highgui.h"
+#include <opencv2/opencv.hpp>
+
+#include <opencv2/opencv.hpp>
+#include "opencv2/xfeatures2d.hpp"
+#include "opencv2/features2d.hpp"
+using namespace std;
+using namespace cv;
+using namespace cv::xfeatures2d;
 
 using namespace std;
 
@@ -123,9 +132,10 @@ void extract_nonoverlapping_sift(SiftCloudT::Ptr& sweep_features, CloudT::Ptr& s
                 c[0] = cropped_clouds[i]->at(ind).b;
             }
         }
-        cv::FastFeatureDetector detector;
+        Ptr<FastFeatureDetector> detector=FastFeatureDetector::create(10,true);
+        //cv::FastFeatureDetector detector;
         std::vector<cv::KeyPoint> keypoints;
-        detector.detect(img, keypoints);
+        detector->detect(img, keypoints);
         cv::SIFT::DescriptorParams descriptor_params;
         descriptor_params.isNormalize = true; // always true, shouldn't matter
         descriptor_params.magnification = 3.0; // 3.0 default
@@ -277,8 +287,9 @@ tuple<cv::Mat, cv::Mat, int, int> compute_image_for_cloud(CloudT::Ptr& cloud, co
 pair<SiftCloudT::Ptr, CloudT::Ptr> extract_sift_features(cv::Mat& image, cv::Mat& depth, int minx, int miny, const Eigen::Matrix3f& K)
 {
     std::vector<cv::KeyPoint> cv_keypoints;
-    cv::FastFeatureDetector detector;
-    detector.detect(image, cv_keypoints);
+    //cv::FastFeatureDetector detector;
+    Ptr<FastFeatureDetector>detector=FastFeatureDetector::create(10,true);
+    detector->detect(image, cv_keypoints);
 
     //-- Step 2: Calculate descriptors (feature vectors)
     cv::SIFT::DescriptorParams descriptor_params;

@@ -15,6 +15,16 @@
 #include <pcl/features/normal_3d_omp.h>
 #include <pcl/octree/octree.h>
 
+#include "highgui.h"
+#include <opencv2/opencv.hpp>
+
+#include <opencv2/opencv.hpp>
+#include "opencv2/xfeatures2d.hpp"
+#include "opencv2/features2d.hpp"
+using namespace std;
+using namespace cv;
+using namespace cv::xfeatures2d;
+
 #define VISUALIZE false
 
 using namespace std;
@@ -170,12 +180,12 @@ void register_objects::calculate_features_for_image(cv::Mat& descriptors, std::v
     //detector_params.edgeThreshold = 15.0; // 10.0 default
     //detector_params.threshold = 0.04; // 0.04 default
     //cv::SiftFeatureDetector detector(detector_params);
-    cv::FastFeatureDetector detector;
+     Ptr<FastFeatureDetector> detector = FastFeatureDetector::create(10, true);
 
     //cv::StarFeatureDetector detector;
     //cv::MserFeatureDetector detector;
-    detector.detect(image, keypoints);
-
+    //detector.detect(image, keypoints);
+ detector->detect(image, keypoints);
     //-- Step 2: Calculate descriptors (feature vectors)
     //cv::Mat descriptors;
     // the length of the descriptors is 128

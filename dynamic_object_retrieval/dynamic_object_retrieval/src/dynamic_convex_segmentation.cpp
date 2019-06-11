@@ -48,7 +48,7 @@ pair<int, vector<string> > convex_segment_cloud(int counter, const boost::filesy
     map<size_t, size_t> indices;
     std::tie(g, convex_g, supervoxels, convex_segments, indices) = ss.compute_convex_oversegmentation(cloud, false);
 
-    ss.save_graph(*convex_g, (convex_path / "graph.cereal").string());
+    //ss.save_graph(*convex_g, (convex_path / "graph.cereal").string());
 
     delete g;
     delete convex_g;
@@ -89,7 +89,7 @@ int main(int argc, char** argv)
 
     summary.index_convex_segment_paths.clear();
     int counter = 0;
-    for (const string& xml : folder_xmls) {
+  for (const string& xml : folder_xmls) {
         vector<string> segment_paths;
         tie(counter, segment_paths) = convex_segment_cloud(counter, boost::filesystem::path(xml));
         summary.index_convex_segment_paths.insert(summary.index_convex_segment_paths.end(), segment_paths.begin(), segment_paths.end());
