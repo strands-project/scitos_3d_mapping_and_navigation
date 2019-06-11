@@ -7,12 +7,21 @@ project(calibrate_sweeps)
 find_package(catkin REQUIRED COMPONENTS roscpp message_generation qt_build semantic_map metaroom_xml_parser strands_sweep_registration actionlib actionlib_msgs)
 
 set(CMAKE_CXX_FLAGS "-O4 -fPIC -std=c++0x -fpermissive ${CMAKE_CXX_FLAGS}")
-set(CMAKE_PREFIX_PATH /usr/share/pcl-1.7/ ${CMAKE_PREFIX_PATH})
-set(PCL_DIR /usr/share/pcl-1.7/)
-find_package(PCL 1.7 REQUIRED NO_DEFAULT_PATH)
+
+
+
+
+
+set(PCL_DIR "/usr/lib/x86_64-linux-gnu/cmake/pcl/")
+
+
+
+find_package(PCL 1.3 REQUIRED)
+
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
+
 
 
 rosbuild_prepare_qt4(QtCore QtXml)
@@ -39,21 +48,4 @@ catkin_package(
 
 include_directories(
   ${catkin_INCLUDE_DIRS}
-)
-
-add_executable(calibrate_sweep_as src/calibrate_sweep_action_server.cpp )
-add_dependencies(calibrate_sweep_as calibrate_sweeps_generate_messages_cpp)
-
- target_link_libraries(calibrate_sweep_as
-   ${catkin_LIBRARIES}
-   ${PCL_LIBRARIES}
-   ${QT_LIBRARIES}
-  )
-
-############################# INSTALL TARGETS
-
-install(TARGETS calibrate_sweep_as 
-  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

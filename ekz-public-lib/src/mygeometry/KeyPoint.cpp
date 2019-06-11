@@ -1,6 +1,6 @@
 #include "KeyPoint.h"
 
-KeyPoint::KeyPoint(){
+KeyPoint2::KeyPoint2(){
 	descriptor = 0;
 	point = 0;
 	r = 0;
@@ -10,14 +10,14 @@ KeyPoint::KeyPoint(){
 	chain = new KeyPointChain(this);
 	frame_id = 0;
 };
-KeyPoint::~KeyPoint(){
+KeyPoint2::~KeyPoint2(){
 	if(descriptor != 0){delete descriptor;}
 	descriptor = 0;
 	if(point != 0){delete point;}
 	point = 0;
 };
 
-void KeyPoint::print(){
+void KeyPoint2::print(){
 	printf("----------------------------------------------\n");
 	for(unsigned int i = 0; i < cluster_distance_pairs.size();i++){
 		printf("%i : %f\n",cluster_distance_pairs.at(i).first,cluster_distance_pairs.at(i).second);
@@ -26,7 +26,7 @@ void KeyPoint::print(){
 
 bool compare_v(pair <int , float > a, pair <int , float > b) {return (a.second < b.second);}
 
-void KeyPoint::sortDistances(){std::sort (cluster_distance_pairs.begin(), cluster_distance_pairs.end(),compare_v);}
+void KeyPoint2::sortDistances(){std::sort (cluster_distance_pairs.begin(), cluster_distance_pairs.end(),compare_v);}
 
 /*
 struct value_index {
@@ -39,7 +39,7 @@ bool compare_v(value_index a,value_index b)
 	return (a.value < b.value);
 }
 
-void KeyPoint::setWordDistances(float * distances, int nr_words){
+void KeyPoint2::setWordDistances(float * distances, int nr_words){
 	this->nr_words = nr_words;
 	word_distances_value = distances;
 	value_index * values = new value_index[nr_words]; 

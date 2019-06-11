@@ -18,7 +18,7 @@
 //#include "opencv2/nonfree/nonfree.hpp"
 
 using namespace std;
-bool comparison_Surf (KeyPoint * i,KeyPoint * j) { return (i->stabilety>j->stabilety); }
+bool comparison_Surf (KeyPoint2 * i,KeyPoint2 * j) { return (i->stabilety>j->stabilety); }
 
 SurfExtractor::SurfExtractor(){
 	hessianThreshold = 300;
@@ -41,7 +41,7 @@ KeyPointSet * SurfExtractor::getKeyPointSet(FrameInput * fi){
 	cv::Mat img(rgb_img);
 	
 	cv::Mat desc1;
-	vector <cv::KeyPoint> kp1;
+	vector <cv::KeyPoint2> kp1;
 
 	if(!gpu){
 		cv::SURF surf = cv::SURF(hessianThreshold, nOctaves, nOctaveLayers, extended, upright);
@@ -66,7 +66,7 @@ KeyPointSet * SurfExtractor::getKeyPointSet(FrameInput * fi){
 	}
 
 	for(int i = 0; i < (int)kp1.size();i++){
-		cv::KeyPoint curr = kp1.at(i);
+		cv::KeyPoint2 curr = kp1.at(i);
 
 		int w = curr.pt.x+0.5;
 		int h = curr.pt.y+0.5;
@@ -75,7 +75,7 @@ KeyPointSet * SurfExtractor::getKeyPointSet(FrameInput * fi){
 		fi->getRGB(r,g,b,curr.pt.x,curr.pt.y);
 		fi->getXYZ(x,y,z,curr.pt.x,curr.pt.y);
 		
-		KeyPoint * kp = new KeyPoint();
+		KeyPoint2 * kp = new KeyPoint2();
 		kp->w = curr.pt.x;
 		kp->h = curr.pt.y;
 		kp->stabilety = curr.response;
@@ -127,12 +127,12 @@ KeyPointSet * SurfExtractor::getKeyPointSet(FrameInput * fi){
 		cvCopy( rgb_img, img_combine, NULL );
 
 		for(unsigned int i = 0; i < keypoints->valid_key_points.size(); i++){
-			KeyPoint * kp = keypoints->valid_key_points.at(i);
+			KeyPoint2 * kp = keypoints->valid_key_points.at(i);
 			cvCircle(img_combine,cvPoint(kp->w, kp->h), 3,cvScalar(0, 255, 0, 0),1, 8, 0);
 		}
 
 		for(unsigned int i = 0; i < keypoints->invalid_key_points.size(); i++){
-			KeyPoint * kp = keypoints->invalid_key_points.at(i);
+			KeyPoint2 * kp = keypoints->invalid_key_points.at(i);
 			cvCircle(img_combine,cvPoint(kp->w, kp->h), 3,cvScalar(0, 0, 255, 0),1, 8, 0);
 		}
 
