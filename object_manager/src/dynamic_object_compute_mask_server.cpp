@@ -9,7 +9,7 @@
 #include <pcl/point_types.h>
 #include <tf/tf.h>
 #include <geometry_msgs/Transform.h>
-#include <pcl/visualization/pcl_visualizer.h>
+//#include <pcl/visualization/pcl_visualizer.h>
 #include <object_3d_retrieval/supervoxel_segmentation.h>
 #include <convex_segmentation/CloudArray.h>
 #include <pcl/features/normal_3d_omp.h>
@@ -29,7 +29,7 @@ using namespace std;
 
 ros::ServiceClient surfel_client;
 ros::ServiceClient registration_client;
-pcl::visualization::PCLVisualizer *p;
+//pcl::visualization::PCLVisualizer *p;
 std::string g_segmentation_method;
 
 std::vector<CloudPtr> compute_convex_segmentation(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud_normals);
