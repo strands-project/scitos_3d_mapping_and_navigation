@@ -3,7 +3,10 @@ project(ekz_public_lib)
 
 set(CMAKE_CXX_FLAGS "-O4 -g -pg -Wunknown-pragmas -Wno-unknown-pragmas -Wsign-compare ${CMAKE_CXX_FLAGS}")
 
-find_package(catkin REQUIRED COMPONENTS rosbag cv_bridge roscpp rospy std_msgs pcl_ros sensor_msgs)
+#find_package(catkin REQUIRED COMPONENTS rosbag cv_bridge roscpp rospy std_msgs pcl_ros sensor_msgs)
+
+
+find_package(catkin REQUIRED COMPONENTS rosbag cv_bridge roscpp rospy std_msgs pcl_ros sensor_msgs message_generation std_msgs roscpp sensor_msgs nav_msgs tf visualization_msgs image_transport nav_msgs) ## actionlib_msgs)
 
 ##############################################
 ##################### INCLUDES ###############
@@ -41,6 +44,10 @@ include_directories(include/Map)
 add_library(frameinput_ekzpublic src/core/FrameInput.cpp)
 target_link_libraries(frameinput_ekzpublic ${OpenCV_LIBRARIES} ${PCL_LIBRARIES})
 
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
 add_library(FeatureDescriptor_ekzpublic
 src/FeatureDescriptor/FeatureDescriptor.cpp
 src/FeatureDescriptor/OrbFeatureDescriptor.cpp
@@ -48,8 +55,8 @@ src/FeatureDescriptor/SurfFeatureDescriptor64.cpp
 src/FeatureDescriptor/SurfFeatureDescriptor128.cpp
 src/FeatureDescriptor/FloatHistogramFeatureDescriptor.cpp )
 
-add_library(mygeometry_ekzpublic src/mygeometry/HasDistance.cpp src/mygeometry/Point.cpp src/mygeometry/Line.cpp src/mygeometry/Plane.cpp src/mygeometry/PlaneChain.cpp src/mygeometry/KeyPoint.cpp src/mygeometry/KeyPointChain.cpp src/mygeometry/KeyPointSet.cpp)
-target_link_libraries(mygeometry_ekzpublic FeatureDescriptor_ekzpublic frameinput_ekzpublic)
+add_library(mygeometry_ekzpublic src/mygeometry/HasDistance.cpp src/mygeometry/Point.cpp src/mygeometry/Line.cpp src/mygeometry/Plane.cpp src/mygeometry/PlaneChain.cpp  src/mygeometry/KeyPointChain.cpp src/mygeometry/KeyPointSet.cpp src/mygeometry/KeyPoint2.cpp src/mygeometry/Point2.cpp)
+target_link_libraries(mygeometry_ekzpublic FeatureDescriptor_ekzpublic frameinput_ekzpublic ${OpenCV_LIBRARIES} ${PCL_LIBRARIES}  ${catkin_LIBRARIES})
 
 add_library(FeatureExtractor_ekzpublic 
 src/FeatureExtractor/FeatureExtractor.cpp 
